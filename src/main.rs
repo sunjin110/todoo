@@ -1,8 +1,8 @@
 mod handlers;
 mod repositorys;
 
+use axum::extract::Extension;
 use axum::routing::post;
-use axum::{extract::Extension};
 use axum::{routing::get, Router};
 use serde::{Deserialize, Serialize};
 use std::env;

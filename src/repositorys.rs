@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock, RwLockWriteGuard, RwLockReadGuard};
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
@@ -92,10 +92,8 @@ impl TodoRepository for TodoRepositoryForMemory {
 
     fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo> {
         let mut store = self.write_store_ref();
-        let todo = store
-                .get(&id)
-                .context(RepositoryError::NotFount(id))?;
-        
+        let todo = store.get(&id).context(RepositoryError::NotFount(id))?;
+
         let text = payload.text.unwrap_or(todo.text.clone());
         let completed = payload.completed.unwrap_or(todo.completed);
 
@@ -113,5 +111,57 @@ impl TodoRepository for TodoRepositoryForMemory {
         let mut store = self.write_store_ref();
         store.remove(&id).ok_or(RepositoryError::NotFount(id))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn todo_crud_scenario() {
+        let text = "todo text".to_string();
+        let id = 1;
+        let expected = Todo::new(id, text.clone());
+
+        let repository = TodoRepositoryForMemory::new();
+
+        // create
+        let todo = repository.create(CreateTodo { text });
+        assert_eq!(expected, todo);
+
+        // find
+        let todo = repository.find(todo.id).unwrap();
+        assert_eq!(expected, todo);
+
+        // all
+        let todos = repository.all();
+        assert_eq!(vec![expected], todos);
+
+        // update
+        let text = "update todo".to_string();
+
+        let todo = repository
+            .update(
+                1,
+                UpdateTodo {
+                    text: Some(text.clone()),
+                    completed: Some(true),
+                },
+            )
+            .expect("failed update todo.");
+
+        assert_eq!(
+            Todo {
+                id,
+                text,
+                completed: true,
+            },
+            todo
+        );
+
+        // delete
+        let res = repository.delete(id);
+        assert!(res.is_ok());
     }
 }

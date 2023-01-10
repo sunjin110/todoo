@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::Extension, Json};
+use axum::{extract::Extension, response::IntoResponse, Json};
 use hyper::StatusCode;
 
 use crate::repositorys::{CreateTodo, TodoRepository};
